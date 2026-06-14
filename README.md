@@ -1,29 +1,30 @@
 # 3-Tier Kubernetes Task Management App
 
-This project is a small full-stack task management application deployed as a 3-tier Kubernetes setup:
+This repository contains a simple task manager implemented as a 3-tier application and packaged for Kubernetes deployment with Helm.
 
-- Frontend: React + Material UI
-- Backend: Express.js + Mongoose
+- Frontend: React 17 with Material UI
+- Backend: Express.js API with Mongoose
 - Database: MongoDB
 
-It is designed to demonstrate containerization, Helm-based Kubernetes deployment, and a basic cloud-native application flow.
+It is intended for learning containerization, Helm charts, and cloud-native service connectivity.
 
 ## Project Overview
 
-The application lets users create, view, update, and delete tasks. The frontend calls the backend API, and the backend stores task data in MongoDB.
+The application lets users create, list, complete, and delete tasks.
+The frontend communicates with the backend API, and the backend persists task data in MongoDB.
 
 ### Architecture
 
 ```text
-User -> React Frontend -> Express API -> MongoDB
-         (Port 3000)        (Port 8080)   (Port 27017)
+Browser -> Nginx frontend -> Express backend -> MongoDB
+          (frontend service)   (backend service)
 ```
 
-The Kubernetes charts under `k8_manifests/` are set up to deploy:
+In Kubernetes, the app is deployed as three Helm charts under `k8_manifests/`:
 
-- `frontend` chart
-- `backend` chart
-- `mongo` chart
+- `frontend`
+- `backend`
+- `mongo`
 
 ## Tech Stack
 
@@ -32,6 +33,7 @@ The Kubernetes charts under `k8_manifests/` are set up to deploy:
 - React Scripts
 - Material UI
 - Axios
+- Nginx (container runtime for static files and API proxy)
 
 ### Backend
 - Node.js
@@ -41,8 +43,8 @@ The Kubernetes charts under `k8_manifests/` are set up to deploy:
 
 ### Infrastructure
 - Docker
-- Kubernetes / Minikube
-- Helm charts
+- Kubernetes
+- Helm
 
 ## Project Structure
 
@@ -51,28 +53,97 @@ The Kubernetes charts under `k8_manifests/` are set up to deploy:
 ├── app/
 │   ├── backend/
 │   │   ├── Dockerfile
-│   │   ├── index.js
 │   │   ├── db.js
-│   │   ├── models/
-│   │   └── routes/
+│   │   ├── index.js
+│   │   ├── models/task.js
+│   │   └── routes/tasks.js
 │   └── frontend/
 │       ├── Dockerfile
+│       ├── nginx.conf
+│       ├── package.json
 │       ├── public/
 │       └── src/
+├── diagrams/
 ├── k8_manifests/
 │   ├── backend/
 │   ├── frontend/
 │   └── mongo/
-├── diagrams/
 └── todo.md
 ```
 
 ## How the App Works
 
 1. The React frontend renders the task list UI.
-2. The frontend sends API requests to the backend.
-3. The Express backend stores and retrieves tasks from MongoDB.
-4. The Kubernetes charts expose the services for deployment in a cluster.
+2. Frontend code calls the backend API at `/api/tasks`.
+3. The Express backend performs CRUD operations and stores tasks in MongoDB.
+4. In Kubernetes, the frontend service routes requests to the backend service, and the backend service connects to the MongoDB service.
+
+## Frontend Behavior
+
+The frontend uses `app/frontend/src/services/taskServices.js` with a default API URL of `/api/tasks`.
+When deployed in Kubernetes, the frontend receives `REACT_APP_BACKEND_URL` from the Helm chart:
+
+```yaml
+REACT_APP_BACKEND_URL: "http://backend:8080/api/tasks"
+```
+
+The production container is served by Nginx, and `nginx.conf` proxies `/api` requests to `http://backend:8080`.
+
+## Backend Behavior
+
+The backend exposes:
+
+- `GET /api/tasks`
+- `POST /api/tasks`
+- `PUT /api/tasks/:id`
+- `DELETE /api/tasks/:id`
+- `GET /ok` health endpoint
+
+The backend uses `app/backend/db.js` to connect to MongoDB using:
+
+```bash
+mongodb://localhost:27017/todo?directConnection=true
+```
+
+when no `MONGO_CONN_STR` environment variable is provided.
+
+In Kubernetes, the backend chart sets:
+
+- `MONGO_CONN_STR=mongodb://admin:password123@mongo:27017/todo?directConnection=true&authSource=admin`
+- `MONGO_USERNAME=admin`
+- `MONGO_PASSWORD=password123`
+- `USE_DB_AUTH=true`
+
+## Kubernetes / Helm Deployment
+
+Each layer is deployed with a Helm chart under `k8_manifests/`.
+
+### Default service names
+
+- MongoDB service: `mongo`
+- Backend service: `backend`
+- Frontend service: `frontend`
+
+### Default ports
+
+- MongoDB: `27017`
+- Backend: `8080`
+- Frontend: `80`
+
+### Deploy charts
+
+```bash
+helm install mongo ./k8_manifests/mongo
+helm install backend ./k8_manifests/backend
+helm install frontend ./k8_manifests/frontend
+```
+
+### Notes
+
+- The Helm charts currently disable ingress by default.
+- Frontend and backend services are ClusterIP by default.
+- The MongoDB chart creates a PVC-backed data volume by default.
+- Secrets and credentials are currently configured as plain values in Helm values files.
 
 ## Local Development
 
@@ -80,8 +151,8 @@ The Kubernetes charts under `k8_manifests/` are set up to deploy:
 
 - Node.js
 - npm
-- Docker (optional for containerized run)
-- MongoDB (for local backend testing)
+- Docker (optional)
+- Local MongoDB for backend testing
 
 ### Run the backend locally
 
@@ -91,15 +162,9 @@ npm install
 node index.js
 ```
 
-The backend listens on:
+Default backend endpoint:
 
 - `http://localhost:8080/api/tasks`
-
-It uses the following default MongoDB connection string:
-
-```bash
-mongodb://localhost:27017/todo?directConnection=true
-```
 
 ### Run the frontend locally
 
@@ -109,86 +174,40 @@ npm install
 npm start
 ```
 
-The frontend runs on:
+Local frontend endpoint:
 
 - `http://localhost:3000`
 
-You can set the backend URL with:
+Override the backend target with:
 
 ```bash
 REACT_APP_BACKEND_URL=http://localhost:8080/api/tasks
 ```
 
-## Docker Usage
+## Current State
 
-### Build backend image
-
-```bash
-cd app/backend
-docker build -t <your-backend-image> .
-```
-
-### Build frontend image
-
-```bash
-cd app/frontend
-docker build -t <your-frontend-image> .
-```
-
-## Kubernetes / Helm Deployment
-
-The Helm charts are located in `k8_manifests/`.
-
-### Deploy MongoDB
-
-```bash
-helm install mongo ./k8_manifests/mongo
-```
-
-### Deploy Backend
-
-```bash
-helm install backend ./k8_manifests/backend
-```
-
-### Deploy Frontend
-
-```bash
-helm install frontend ./k8_manifests/frontend
-```
-
-### Notes
-
-- The backend chart expects a MongoDB service accessible as `mongodb-svc` inside the cluster.
-- The frontend chart currently uses `REACT_APP_BACKEND_URL` for API connectivity.
-- The charts are still in progress for full production-grade ingress and CI/CD automation.
-
-## Current Status
-
-The project already includes:
+Implemented:
 
 - React frontend UI for task management
 - Express backend API for CRUD operations
 - MongoDB persistence
-- Dockerfiles for both app layers
+- Dockerfiles for frontend and backend
 - Helm charts for frontend, backend, and MongoDB
 
-The following items are still pending in `todo.md`:
+Pending:
 
 - frontend tests
 - backend tests
-- GitHub Actions CI/CD pipelines
+- GitHub Actions CI/CD
 - Kubernetes validation in Minikube
-- deployment flow improvements
+- production-ready ingress and secrets
+- documented release/deployment flow
 
 ## Suggested Next Steps
 
-1. Add automated tests for frontend and backend.
-2. Set up GitHub Actions for CI and CD.
-3. Configure proper ingress and service routing for the cluster.
-4. Secure secrets for MongoDB credentials instead of base64 placeholders.
-5. Add health checks and production-ready resource limits.
+1. Add automated frontend and backend tests.
+2. Add Helm secrets or Kubernetes Secret resources for database credentials.
+3. Enable and validate ingress routing in the charts.
+4. Add a CI/CD pipeline that builds images and validates Helm deployment.
+5. Add resource requests/limits and improved readiness/liveness configuration.
 
-## Summary
-
-This repository is a practical example of a small 3-tier application built for learning and demonstrating Kubernetes deployment workflows using Docker and Helm.
