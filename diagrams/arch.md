@@ -45,14 +45,14 @@ Frontend service (nginx)
 |                 |          |                 |          |                 |
 +-----------------+          +-----------------+          +-----------------+
                                      │                          |
-                                     │ /api                    │ MongoDB URI
-                                     │ proxy                   ▼
+                                     │ /api                     │ MongoDB URI
+                                     │ proxy                    ▼
                                      ▼                  +-----------------+
                               +-----------------+       |                 |
                               |   Frontend      |       |   MongoDB       |
                               |   Service       |       |   Service       |
                               +-----------------+       |                 |
-                                                          +-----------------+
+                                                        +-----------------+
 ```
 
 ## Service Details
