@@ -4,6 +4,9 @@
 
 # This section is for namespace (not issued by Helm)
 namespace: mern-app
+createNamespace: true
+
+secretName: mongo-db-secret
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1
@@ -20,17 +23,11 @@ image:
 imagePullSecrets: []
 # This is to override the chart name.
 nameOverride: ""
-fullnameOverride: ""
+fullnameOverride: "mongo"
 
 # This section is for running custom commands in the pods (not issued by Helm)
-commands:
-  - "numactl"
-  - "--interleave=all"
-  - "mongod"
-  - "--wiredTigerCacheSizeGB"
-  - "0.1"
-  - "--bind_ip"
-  - "0.0.0.0"
+# Commenting this as it will mess with mongo images default entrypoint and command
+# command: ['numactl', '--interleave=all', 'mongod', '--wiredTigerCacheSizeGB', '0.1', '--bind_ip', '0.0.0.0' ]
 
 # This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:
@@ -130,7 +127,7 @@ resources:
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   limits:
-    cpu: 500Mi  
+    cpu: 500m
     memory: 1Gi
   requests:
     cpu: 250m
@@ -141,15 +138,30 @@ resources:
 # todo: add support for secrets in future
 env:
   - name: MONGO_INITDB_ROOT_USERNAME
-    value: YWRtaW4=         #admin
+    valueFrom:
+      secretKeyRef:
+        name: mongo-db-secret
+        key: username
   - name: MONGO_INITDB_ROOT_PASSWORD
-    value: cGFzc3dvcmQxMjM= #password123
+    valueFrom: 
+      secretKeyRef:
+        name: mongo-db-secret
+        key: password
 
 # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-# livenessProbe:
-#   httpGet:
-#     path: /
-#     port: http
+livenessProbe:
+  exec:
+    command:
+    - mongosh
+    - --port
+    - "27017"
+    - --eval
+    - "db.adminCommand('ping')"
+    - --quiet
+  initialDelaySeconds: 30
+  periodSeconds: 20
+  timeoutSeconds: 10
+  failureThreshold: 3
 # readinessProbe:
 #   httpGet:
 #     path: /
@@ -165,16 +177,21 @@ autoscaling:
 
 # Additional volumes on the output Deployment definition.
 volumes: []
-  # - name: foo
-  #   secret:
-  #     secretName: mysecret
-  #     optional: false
+
+# For PersistentVolume and PersistentVolumeClaims (not issued by helm)
+persistence:
+  enabled: true
+  storageClass: "manual"
+  accessModes: ReadWriteMany
+  size: 800Mi
+  existingClaim: ""
+  # if you need any additional volumes, you can define them here
+  # additionalVolumes: []
 
 # Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
-  # - name: foo
-  #   mountPath: "/etc/foo"
-  #   readOnly: true
+volumeMounts: 
+  - name: mongo-data
+    mountPath: "data/db"
 
 nodeSelector: {}
 

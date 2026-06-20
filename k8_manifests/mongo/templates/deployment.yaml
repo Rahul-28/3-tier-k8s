@@ -35,9 +35,11 @@ spec:
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
+          {{- with .Values.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- with .Values.securityContext }}
-          commands:
-            {{- toYaml .Values.commands | nindent 12 }}
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -67,10 +69,19 @@ spec:
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.volumes }}
-      volumes:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        # {{- with .Values.volumes }}
+        volumes:
+        - name: mongo-data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (printf "%s-pvc" (include "mongo.fullname" .)) }}
+          {{- else }}
+          emptyDir: { }
+          {{- end }}
+          {{- if .Values.persistence.additionalVolumes }}
+            {{- .Values.persistence.additionalVolumes | toYaml | nindent 8}}
+          {{- end }}
+        # {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
