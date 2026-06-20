@@ -4,6 +4,10 @@
 
 # This section is for namespace (not issued by Helm)
 namespace: mern-app
+createNamespace: true
+
+# Manage Backend Secret name
+SecretName: backend-db-secrets
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 2
@@ -25,8 +29,8 @@ image:
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
 # This is to override the chart name.
-nameOverride: "backend"
-fullnameOverride: ""
+nameOverride: ""
+fullnameOverride: "backend"
 
 # This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:
@@ -136,11 +140,19 @@ resources: {}
 # todo:maybe via DNS or some thing instead of localhost
 env:
   - name: MONGO_CONN_STR
-    value: mongodb://mongodb-svc:27017/todo?directConnection=true
+    value: mongodb://mongo:27017/todo?directConnection=true&authSource=admin
   - name: MONGO_USERNAME
-    value: YWRtaW4=         #admin 
+    valueFrom:
+      secretKeyRef:
+        name: backend-db-secrets
+        key: username
   - name: MONGO_PASSWORD
-    value: cGFzc3dvcmQxMjM=       #password123
+    valueFrom: 
+      secretKeyRef:
+        name: backend-db-secrets
+        key: password
+  - name: USE_DB_AUTH
+    value: "true"
 
 # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
@@ -153,9 +165,9 @@ readinessProbe:
   httpGet:
     path: /ok
     port: 8080
-    initalDelaySeconds: 2
-    periodSeconds: 5
-    successThresholds: 1
+  initialDelaySeconds: 2
+  periodSeconds: 5
+  successThreshold: 1
 
 # This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:
