@@ -10,6 +10,8 @@
 - [x] Create new Kubernetes manifests for MongoDB.(use helm if needed)
 - [x] Create new Kubernetes manifests for the frontend.(use helm if needed)
 - [x] Create new Kubernetes manifests for the backend.(use helm if needed)
+- [x] Create k8s secrets for db username and password 
+- [x] Update the deployments to use the created secrets instead of plainText 
 - [ ] Create frontend tests to run in CI pipelines.
 - [ ] Create backend tests to run in CI pipelines.
 - [ ] Create CI pipelines using GitHub Actions.
