@@ -4,16 +4,29 @@ const cors = require("cors");
 const express = require("express");
 const app = express();
 
-connection();
-
 app.use(express.json());
 app.use(cors());
 
 app.get('/ok', (req, res) => {
-    res.status(200).send('ok')
-  })
+  res.status(200).send('ok');
+});
 
 app.use("/api/tasks", tasks);
 
 const port = process.env.PORT || 8080;
-app.listen(port, () => console.log(`Listening on http://localhost:${port}/api/tasks ...`));
+
+const startServer = () => {
+  return app.listen(port, () => {
+    console.log(`Listening on http://localhost:${port}/api/tasks ...`);
+  });
+};
+
+if (require.main === module) {
+  connection().then(() => startServer());
+}
+
+module.exports = {
+  app,
+  connection,
+  startServer,
+};
