@@ -176,7 +176,7 @@ autoscaling:
   # targetMemoryUtilizationPercentage: 80
 
 # Additional volumes on the output Deployment definition.
-volumes: []
+# volumes: 
 
 # For PersistentVolume and PersistentVolumeClaims (not issued by helm)
 persistence:
@@ -191,7 +191,7 @@ persistence:
 # Additional volumeMounts on the output Deployment definition.
 volumeMounts: 
   - name: mongo-data
-    mountPath: "data/db"
+    mountPath: "/data/db"
 
 nodeSelector: {}
 
