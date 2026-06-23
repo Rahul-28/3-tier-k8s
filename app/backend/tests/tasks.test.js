@@ -1,7 +1,12 @@
+process.env.USE_DB_AUTH = 'false';
+process.env.PORT = '8081';
+
 const request = require('supertest');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const { app, connection } = require('../index');
+
+jest.setTimeout(30000);
 
 let mongoServer;
 
@@ -9,7 +14,6 @@ describe('Task API', () => {
   beforeAll(async () => {
     mongoServer = await MongoMemoryServer.create();
     process.env.MONGO_CONN_STR = mongoServer.getUri();
-    process.env.USE_DB_AUTH = 'false';
     await connection();
   });
 
@@ -19,7 +23,10 @@ describe('Task API', () => {
   });
 
   beforeEach(async () => {
-    await mongoose.connection.db.dropDatabase().catch(() => {});
+    const collections = mongoose.connection.collections;
+    for (const key in collections) {
+      await collections[key].deleteMany({});
+    }
   });
 
   it('GET /api/tasks returns an empty list initially', async () => {
