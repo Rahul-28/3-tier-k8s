@@ -12,11 +12,11 @@
 - [x] Create new Kubernetes manifests for the backend.(use helm if needed)
 - [x] Create k8s secrets for db username and password 
 - [x] Update the deployments to use the created secrets instead of plainText 
-- [ ] Create frontend tests to run in CI pipelines.
-- [ ] Create backend tests to run in CI pipelines.
-- [ ] Create CI pipelines using GitHub Actions.
-- [ ] Ensure the CI pipeline runs tests.
-- [ ] Ensure the CI pipeline builds Docker images.
+- [x] Create frontend tests to run in CI pipelines.
+- [x] Create backend tests to run in CI pipelines.
+- [x] Create CI pipelines using GitHub Actions.
+- [x] Ensure the CI pipeline runs tests.
+- [ d] Ensure the CI pipeline builds Docker images.
 - [ ] Ensure the CI pipeline validates Kubernetes build/deployment using Minikube.
 - [ ] Create a CD pipeline using GitHub Actions.
 - [ ] Figure out and define the CD deployment flow.
