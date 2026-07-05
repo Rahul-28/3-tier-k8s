@@ -1,0 +1,153 @@
+---
+# Source: backend/templates/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: "mern-app"
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: backend
+    helm.sh/chart: backend-0.1.0
+
+---
+# Source: backend/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backend
+  namespace: mern-app
+  labels:
+    helm.sh/chart: backend-0.1.0
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/instance: backend
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+
+---
+# Source: backend/templates/secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  namespace: mern-app
+  name: backend-db-secrets
+type: Opaque
+data:
+  username: YWRtaW4=         #admin
+  password: cGFzc3dvcmQxMjM= #password123
+---
+# Source: backend/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: mern-app
+  name: backend
+  labels:
+    helm.sh/chart: backend-0.1.0
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/instance: backend
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/instance: backend
+
+---
+# Source: backend/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: mern-app
+  name: backend
+  labels:
+    helm.sh/chart: backend-0.1.0
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/instance: backend
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 2
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 25%
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: backend
+      app.kubernetes.io/instance: backend
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: backend-0.1.0
+        app.kubernetes.io/name: backend
+        app.kubernetes.io/instance: backend
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: backend
+      containers:
+        - name: backend
+          image: "rxhul86/3-tier-k8s-backend:latest"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MONGO_CONN_STR
+              value: mongodb://mongo:27017/todo?directConnection=true&authSource=admin
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: backend-db-secrets
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: backend-db-secrets
+            - name: USE_DB_AUTH
+              value: "true"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /ok
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /ok
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            successThreshold: 1
+---
+# Source: backend/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "backend-test-connection"
+  labels:
+    helm.sh/chart: backend-0.1.0
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/instance: backend
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['backend:8080']
+  restartPolicy: Never
+
