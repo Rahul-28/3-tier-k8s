@@ -10,21 +10,6 @@ metadata:
     helm.sh/chart: mongo-0.1.0
 
 ---
-# Source: mongo/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: mongo
-  namespace: mern-app
-  labels:
-    helm.sh/chart: mongo-0.1.0
-    app.kubernetes.io/name: mongo
-    app.kubernetes.io/instance: mongo
-    app.kubernetes.io/version: "1.16.0"
-    app.kubernetes.io/managed-by: Helm
-automountServiceAccountToken: true
-
----
 # Source: mongo/templates/secrets.yaml
 apiVersion: v1
 kind: Secret
@@ -117,7 +102,7 @@ spec:
         app.kubernetes.io/version: "1.16.0"
         app.kubernetes.io/managed-by: Helm
     spec:
-      serviceAccountName: mongo
+      serviceAccountName: default
       containers:
         - name: mongo
           image: "mongo:latest"

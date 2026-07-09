@@ -10,21 +10,6 @@ metadata:
     helm.sh/chart: backend-0.1.0
 
 ---
-# Source: backend/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: backend
-  namespace: mern-app
-  labels:
-    helm.sh/chart: backend-0.1.0
-    app.kubernetes.io/name: backend
-    app.kubernetes.io/instance: backend
-    app.kubernetes.io/version: "1.16.0"
-    app.kubernetes.io/managed-by: Helm
-automountServiceAccountToken: true
-
----
 # Source: backend/templates/secrets.yaml
 apiVersion: v1
 kind: Secret
@@ -92,7 +77,7 @@ spec:
         app.kubernetes.io/version: "1.16.0"
         app.kubernetes.io/managed-by: Helm
     spec:
-      serviceAccountName: backend
+      serviceAccountName: default
       containers:
         - name: backend
           image: "rxhul86/3-tier-k8s-backend:latest"
