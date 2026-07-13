@@ -4,7 +4,7 @@
 
 # This section is for namespace (not issued by Helm)
 namespace: mern-app
-createNamespace: true
+createNamespace: false
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1

@@ -4,7 +4,7 @@
 
 # This section is for namespace (not issued by Helm)
 namespace: mern-app
-createNamespace: true
+createNamespace: false
 
 secretName: mongo-db-secret
 
