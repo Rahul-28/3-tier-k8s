@@ -119,6 +119,7 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
+  namespace: mern-app
   name: "backend-test-connection"
   labels:
     helm.sh/chart: backend-0.1.0

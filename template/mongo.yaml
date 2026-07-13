@@ -1,15 +1,4 @@
 ---
-# Source: mongo/templates/namespace.yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: "mern-app"
-  labels:
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/instance: mongo
-    helm.sh/chart: mongo-0.1.0
-
----
 # Source: mongo/templates/secrets.yaml
 apiVersion: v1
 kind: Secret
@@ -123,6 +112,7 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
+  namespace: mern-app
   name: "mongo-test-connection"
   labels:
     helm.sh/chart: mongo-0.1.0

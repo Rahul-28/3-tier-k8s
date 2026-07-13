@@ -1,15 +1,4 @@
 ---
-# Source: frontend/templates/namespace.yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: "mern-app"
-  labels:
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/instance: frontend
-    helm.sh/chart: frontend-0.1.0
-
----
 # Source: frontend/templates/service.yaml
 apiVersion: v1
 kind: Service
@@ -23,7 +12,7 @@ metadata:
     app.kubernetes.io/version: "1.16.0"
     app.kubernetes.io/managed-by: Helm
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   ports:
     - port: 80
       targetPort: http
@@ -90,6 +79,7 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
+  namespace: mern-app
   name: "frontend-test-connection"
   labels:
     helm.sh/chart: frontend-0.1.0
