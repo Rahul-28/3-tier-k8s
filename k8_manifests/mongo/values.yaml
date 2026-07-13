@@ -180,12 +180,13 @@ autoscaling:
 
 # For PersistentVolume and PersistentVolumeClaims (not issued by helm)
 persistence:
-  enabled: true
-  storageClass: "manual"
-  accessModes: ReadWriteMany
+  enabled: false
+  storageClass: ""
+  accessModes: ReadWriteOnce
   size: 800Mi
   existingClaim: ""
-  # if you need any additional volumes, you can define them here
+  # For EKS PoC, persistence is disabled and Mongo uses emptyDir storage.
+  # Enable persistence only after adding a compatible StorageClass.
   # additionalVolumes: []
 
 # Additional volumeMounts on the output Deployment definition.
