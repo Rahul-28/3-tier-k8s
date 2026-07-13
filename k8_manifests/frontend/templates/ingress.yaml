@@ -2,6 +2,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
+  namespace: {{ .Values.namespace }}
   name: {{ include "frontend.fullname" . }}
   labels:
     {{- include "frontend.labels" . | nindent 4 }}
@@ -17,7 +18,7 @@ spec:
   tls:
     {{- range .Values.ingress.tls }}
     - hosts:
-        {{- range .hosts }}
+        {{- range   .hosts }}
         - {{ . | quote }}
         {{- end }}
       secretName: {{ .secretName }}
@@ -30,14 +31,12 @@ spec:
         paths:
           {{- range .paths }}
           - path: {{ .path }}
-            {{- with .pathType }}
-            pathType: {{ . }}
-            {{- end }}
+            pathType: {{ .pathType | default "Prefix" }}
             backend:
               service:
-                name: {{ include "frontend.fullname" $ }}
+                name: {{ default (include "frontend.fullname" $) .backend.service.name }}
                 port:
-                  number: {{ $.Values.service.port }}
+                  number: {{ default $.Values.service.port .backend.service.port }}
           {{- end }}
     {{- end }}
 {{- end }}
