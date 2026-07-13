@@ -21,36 +21,6 @@ data:
   username: YWRtaW4=         #admin
   password: cGFzc3dvcmQxMjM= #password123
 ---
-# Source: mongo/templates/pv.yaml
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: mongo-pv
-  labels:
-    type: local
-spec:
-  storageClassName: manual
-  capacity:
-    storage: 2Gi
-  accessModes:
-    - ReadWriteMany
-  hostPath:
-    path: "/etc/kubernetes/mongodb"
----
-# Source: mongo/templates/pvc.yaml
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: mongo-pvc
-  namespace: mern-app
-spec:
-  storageClassName: manual
-  accessModes:
-    - "ReadWriteMany"
-  resources:
-    requests:
-      storage: "800Mi"
----
 # Source: mongo/templates/service.yaml
 apiVersion: v1
 kind: Service
@@ -147,8 +117,7 @@ spec:
               name: mongo-data
       volumes:
       - name: mongo-data
-        persistentVolumeClaim:
-          claimName: mongo-pvc
+        emptyDir: { }
 ---
 # Source: mongo/templates/tests/test-connection.yaml
 apiVersion: v1
