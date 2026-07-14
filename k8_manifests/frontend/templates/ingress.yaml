@@ -24,19 +24,36 @@ spec:
       secretName: {{ .secretName }}
     {{- end }}
   {{- end }}
+  ingressClassName: alb
   rules:
-    {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
-      http:
+    - http:
         paths:
-          {{- range .paths }}
-          - path: {{ .path }}
-            pathType: {{ .pathType | default "Prefix" }}
+          - path: /api
+            pathType: Prefix
             backend:
               service:
-                name: {{ default (include "frontend.fullname" $) .backend.service.name }}
+                name: backend
                 port:
-                  number: {{ default $.Values.service.port .backend.service.port }}
-          {{- end }}
-    {{- end }}
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+    # {{- range .Values.ingress.hosts }}
+    # - host: {{ .host | quote }}
+    #   http:
+    #     paths:
+    #       {{- range .paths }}
+    #       - path: {{ .path }}
+    #         pathType: {{ .pathType | default "Prefix" }}
+    #         backend:
+    #           service:
+    #             name: {{ default (include "frontend.fullname" $) .backend.service.name }}
+    #             port:
+    #               number: {{ default $.Values.service.port .backend.service.port }}
+    #       {{- end }}
+    # {{- end }}
 {{- end }}
